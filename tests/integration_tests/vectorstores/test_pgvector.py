@@ -17,23 +17,32 @@ CONNECTION_STRING = PGVector.connection_string_from_db_params(
     password=os.environ.get("TEST_PGVECTOR_PASSWORD", "postgres"),
 )
 
-
-ADA_TOKEN_COUNT = 1536
-
-
-class FakeEmbeddingsWithAdaDimension(FakeEmbeddings):
+class FakeEmbeddingsWithNDimension(FakeEmbeddings):
     """Fake embeddings functionality for testing."""
+    def __init__(self, dimensions: int):
+        self.dimensions = n
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Return simple embeddings."""
         return [
-            [float(1.0)] * (ADA_TOKEN_COUNT - 1) + [float(i)] for i in range(len(texts))
+            [float(1.0)] * (self.dimensions - 1) + [float(i)] for i in range(len(texts))
         ]
 
     def embed_query(self, text: str) -> List[float]:
         """Return simple embeddings."""
-        return [float(1.0)] * (ADA_TOKEN_COUNT - 1) + [float(0.0)]
+        return [float(1.0)] * (self.dimensions - 1) + [float(0.0)]
+    
+ADA_TOKEN_COUNT = 1536
 
+class FakeEmbeddingsWithAdaDimension(FakeEmbeddingsWithNDimension):
+    def __init__(self):
+        super().__init__(dimensions=ADA_TOKEN_COUNT)
+
+ALL_MPNET_BASE_V2_COUNT = 768
+
+class FakeEmbeddingsWithAdaDimension(FakeEmbeddingsWithNDimension):
+    def __init__(self):
+        super().__init__(dimensions=ALL_MPNET_BASE_V2_COUNT)
 
 def test_pgvector() -> None:
     """Test end to end construction and search."""
@@ -47,7 +56,6 @@ def test_pgvector() -> None:
     )
     output = docsearch.similarity_search("foo", k=1)
     assert output == [Document(page_content="foo")]
-
 
 def test_pgvector_with_metadatas() -> None:
     """Test end to end construction and search."""
